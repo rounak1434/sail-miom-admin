@@ -65,8 +65,9 @@ export function UserRoleBadge({ role, className }) {
     contractor: 'bg-orange-100 text-orange-700 border-orange-200',
     staff: 'bg-emerald-100 text-emerald-700 border-emerald-200',
     viewer: 'bg-slate-100 text-slate-600 border-slate-200',
+    pending: 'bg-amber-100 text-amber-700 border-amber-200',
   };
-  const roleLabels = { superadmin: 'Super Admin', admin: 'Admin', engineer: 'Engineer', contractor: 'Contractor', staff: 'Staff', viewer: 'Viewer' };
+  const roleLabels = { superadmin: 'Super Admin', admin: 'Admin', engineer: 'Engineer', contractor: 'Contractor', staff: 'Staff', viewer: 'Viewer', pending: 'Pending' };
   return (
     <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border', roleStyles[key] || roleStyles.viewer, className)}>
       {roleLabels[key] || role}

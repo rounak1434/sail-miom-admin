@@ -18,6 +18,7 @@ import { useAuthStore } from '@/store/authStore';
 
 const TABS = [
   { value: '', label: 'All Users' },
+  { value: 'pending', label: 'Pending Approval', isPending: true },
   { value: 'admin', label: 'Admins' },
   { value: 'engineer', label: 'Engineers' },
   { value: 'contractor', label: 'Contractors' },
@@ -26,6 +27,13 @@ const TABS = [
 ];
 
 const ROLE_LABELS = { admin: 'Admin', engineer: 'Engineer', contractor: 'Contractor', staff: 'Staff' };
+// Roles an admin can assign when approving a pending Google signup.
+const ASSIGNABLE_ROLES = [
+  { value: 'engineer', label: 'Engineer' },
+  { value: 'contractor', label: 'Contractor' },
+  { value: 'staff', label: 'Staff' },
+  { value: 'admin', label: 'Admin' },
+];
 
 const EMPTY_USER = { name: '', email: '', employeeId: '', phone: '', password: '', role: 'engineer', locationId: '', department: 'Electrical', company: '' };
 
@@ -53,6 +61,8 @@ export default function UsersPage() {
   const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [formData, setFormData] = useState(EMPTY_USER);
+  const [approveTarget, setApproveTarget] = useState(null); // pending user being approved
+  const [approveRole, setApproveRole] = useState('engineer');
 
   const { data: locations = [] } = useQuery({ queryKey: ['locations'], queryFn: settingsApi.getLocations });
 
@@ -60,13 +70,16 @@ export default function UsersPage() {
   const { data: engData }  = useQuery({ queryKey: ['users-count', 'engineer'],  queryFn: () => usersApi.getAll({ role: 'engineer', limit: 1 }) });
   const { data: conData }  = useQuery({ queryKey: ['users-count', 'contractor'], queryFn: () => usersApi.getAll({ role: 'contractor', limit: 1 }) });
   const { data: inaData }  = useQuery({ queryKey: ['users-count', 'inactive'],   queryFn: () => usersApi.getAll({ status: 'inactive', limit: 1 }) });
+  const { data: penData }  = useQuery({ queryKey: ['users-count', 'pending'],    queryFn: () => usersApi.getAll({ role: 'PENDING', limit: 1 }) });
 
   const totalEngineers   = engData?.total ?? '—';
   const totalContractors = conData?.total ?? '—';
   const totalInactive    = inaData?.total ?? '—';
+  const totalPending     = penData?.total ?? 0;
 
   const params = { ...usersFilter };
-  if (activeTab === 'inactive') { params.status = 'inactive'; params.role = ''; }
+  if (activeTab === 'pending') { params.role = 'PENDING'; params.status = ''; }
+  else if (activeTab === 'inactive') { params.status = 'inactive'; params.role = ''; }
   else if (activeTab) { params.role = activeTab; params.status = ''; }
   else { params.role = ''; params.status = ''; }
 
@@ -107,6 +120,16 @@ export default function UsersPage() {
     } else {
       updateUser.mutate({ id: userModal.user.id, ...formData }, { onSuccess: () => setUserModal(null) });
     }
+  };
+
+  const openApprove = (u) => { setApproveRole('engineer'); setApproveTarget(u); };
+
+  const handleApprove = () => {
+    // One call assigns the role AND activates the account (see updateUser backend).
+    updateUser.mutate(
+      { id: approveTarget.id, role: approveRole, isActive: true },
+      { onSuccess: () => setApproveTarget(null) }
+    );
   };
 
   const handleResetPassword = () => {
@@ -154,6 +177,19 @@ export default function UsersPage() {
         </div>
       </div>
 
+      {/* Pending Google signups awaiting role assignment */}
+      {totalPending > 0 && activeTab !== 'pending' && (
+        <button
+          onClick={() => setActiveTab('pending')}
+          className="w-full flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-left hover:bg-amber-100 transition-colors"
+        >
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex-shrink-0">{totalPending}</span>
+          <span className="text-sm text-amber-800">
+            <strong>{totalPending}</strong> user{totalPending > 1 ? 's' : ''} signed up with Google and need a role assigned before they can use the app. <span className="font-semibold underline">Review →</span>
+          </span>
+        </button>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
@@ -177,6 +213,9 @@ export default function UsersPage() {
           {TABS.map((tab) => (
             <button key={tab.value} onClick={() => setActiveTab(tab.value)} className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${activeTab === tab.value ? 'border-sail-primary text-sail-primary' : 'border-transparent text-sail-text-secondary hover:text-sail-text-primary'}`}>
               {tab.label}
+              {tab.isPending && totalPending > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{totalPending}</span>
+              )}
             </button>
           ))}
         </div>
@@ -232,6 +271,9 @@ export default function UsersPage() {
                             <MoreVertical className="w-4 h-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {String(u.role).toUpperCase() === 'PENDING' && (
+                              <DropdownMenuItem onClick={() => openApprove(u)} className="flex items-center gap-2 text-green-600 focus:text-green-600"><UserCheck className="w-4 h-4" /> Approve &amp; assign role</DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => openEdit(u)} className="flex items-center gap-2"><Edit className="w-4 h-4" /> Edit</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => { setResetTarget(u); setNewPassword(''); }} className="flex items-center gap-2"><Lock className="w-4 h-4" /> Reset Password</DropdownMenuItem>
                             {u.isActive ? (
@@ -358,6 +400,49 @@ export default function UsersPage() {
                 className="px-4 py-2 bg-sail-primary text-white rounded-lg text-sm font-semibold hover:bg-sail-secondary disabled:opacity-60 transition-colors"
               >
                 {resetPassword.isPending ? 'Resetting…' : 'Reset Password'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Approve pending Google signup → assign role + activate */}
+      {approveTarget && (
+        <Modal title="Approve user" onClose={() => setApproveTarget(null)}>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-sail-primary flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs font-bold">{getInitials(approveTarget.name)}</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-sail-text-primary">{approveTarget.name}</p>
+                <p className="text-xs text-sail-text-muted">{approveTarget.email}</p>
+              </div>
+            </div>
+            <p className="text-sm text-sail-text-secondary">
+              This user signed up with Google and has <strong>no role yet</strong>. Choose a role to grant access. They stay locked out until you approve.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-sail-text-primary mb-1.5">Assign role</label>
+              <select
+                value={approveRole}
+                onChange={(e) => setApproveRole(e.target.value)}
+                className="w-full px-3 py-2.5 border border-sail-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sail-primary/20 bg-white"
+              >
+                {ASSIGNABLE_ROLES
+                  .filter((r) => r.value !== 'admin' || canManageAdmins)
+                  .map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </div>
+            <div className="flex gap-2 justify-end pt-2">
+              <button onClick={() => setApproveTarget(null)} className="px-4 py-2 border border-sail-border rounded-lg text-sm font-medium hover:bg-slate-50">Cancel</button>
+              <button
+                onClick={handleApprove}
+                disabled={updateUser.isPending}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-60 transition-colors"
+              >
+                <UserCheck className="w-4 h-4" />
+                {updateUser.isPending ? 'Approving…' : 'Approve & activate'}
               </button>
             </div>
           </div>
