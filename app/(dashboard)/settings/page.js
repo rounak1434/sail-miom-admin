@@ -43,7 +43,7 @@ function InlineForm({ fields, onSave, onCancel, saving }) {
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const qc = useQueryClient();
 
   const { data: locations = [] } = useQuery({ queryKey: ['locations'], queryFn: settingsApi.getLocations });
@@ -67,7 +67,7 @@ export default function SettingsPage() {
 
   const mutOpts = (msg) => ({
     onSuccess: () => { toast.success(msg); qc.invalidateQueries({ queryKey: ['locations'] }); qc.invalidateQueries({ queryKey: ['installation-types'] }); },
-    onError: () => toast.error('Operation failed'),
+    onError: (e) => toast.error(e?.response?.data?.message || 'Operation failed'),
   });
 
   const createLocation = useMutation({ mutationFn: settingsApi.createLocation, ...mutOpts('Location added') });
@@ -96,7 +96,12 @@ export default function SettingsPage() {
 
   const updateMe = useMutation({
     mutationFn: usersApi.updateMe,
-    onSuccess: () => toast.success('Profile updated'),
+    onSuccess: (updated) => {
+      // Push the saved profile back into the auth store so the topbar (and any
+      // other view reading user.name/email) updates immediately — no logout/login.
+      if (updated) updateUser(updated);
+      toast.success('Profile updated');
+    },
     onError: () => toast.error('Failed to update profile'),
   });
 

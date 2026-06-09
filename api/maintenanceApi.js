@@ -28,6 +28,11 @@ export const maintenanceApi = {
     return data;
   },
 
+  delete: async (id) => {
+    const { data } = await api.delete(`/maintenance/${id}`);
+    return data;
+  },
+
   getStats: async () => {
     const { data } = await api.get('/dashboard/stats');
     return (data.data || data).maintenanceStats || { overdue: 0, dueToday: 0, dueThisWeek: 0, completedThisMonth: 0 };

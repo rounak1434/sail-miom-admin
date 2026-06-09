@@ -23,6 +23,15 @@ export function useCreateMaintenance() {
   });
 }
 
+export function useUpdateMaintenance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }) => maintenanceApi.update(id, data),
+    onSuccess: () => { toast.success('Schedule updated'); invalidateMaintenanceData(qc); },
+    onError: () => toast.error('Failed to update schedule'),
+  });
+}
+
 export function useDeleteMaintenance() {
   const qc = useQueryClient();
   return useMutation({

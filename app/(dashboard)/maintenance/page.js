@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { Plus, AlertTriangle, Clock, CheckCircle2, Wrench, X, Save } from 'lucide-react';
-import { useMaintenance, useCreateMaintenance, invalidateMaintenanceData } from '@/hooks/useMaintenance';
+import { Plus, AlertTriangle, Clock, CheckCircle2, Wrench, X, Save, Pencil, Trash2 } from 'lucide-react';
+import { useMaintenance, useCreateMaintenance, useUpdateMaintenance, useDeleteMaintenance, invalidateMaintenanceData } from '@/hooks/useMaintenance';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { maintenanceApi } from '@/api/maintenanceApi';
 import { settingsApi } from '@/api/settingsApi';
@@ -9,6 +9,7 @@ import { formatDate } from '@/lib/utils';
 import { TableSkeleton } from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
 import Pagination from '@/components/shared/Pagination';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { toast } from 'sonner';
 
 const STAT_CARDS = [
@@ -60,6 +61,8 @@ function useCompleteMaintenance() {
 export default function MaintenancePage() {
   const [page, setPage] = useState(1);
   const [showCreate, setShowCreate] = useState(false);
+  const [editId, setEditId] = useState(null);          // null = create mode, else editing this schedule
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [completeTarget, setCompleteTarget] = useState(null);
   const [completionNotes, setCompletionNotes] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
@@ -69,6 +72,8 @@ export default function MaintenancePage() {
   const { data: locations = [] } = useQuery({ queryKey: ['locations'], queryFn: settingsApi.getLocations });
   const { data: installations = [] } = useQuery({ queryKey: ['installations'], queryFn: () => settingsApi.getInstallations() });
   const createMaintenance = useCreateMaintenance();
+  const updateMaintenance = useUpdateMaintenance();
+  const deleteMaintenance = useDeleteMaintenance();
   const completeMaintenance = useCompleteMaintenance();
 
   const schedules = data?.data || [];
@@ -83,7 +88,24 @@ export default function MaintenancePage() {
 
   const setField = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
-  const handleCreate = () => {
+  const closeModal = () => { setShowCreate(false); setEditId(null); setForm(EMPTY_FORM); };
+
+  const openCreate = () => { setEditId(null); setForm(EMPTY_FORM); setShowCreate(true); };
+
+  const openEdit = (s) => {
+    setEditId(s.id);
+    setForm({
+      title: s.title || '',
+      type: s.type || 'MONTHLY',
+      location_id: s.locationId != null ? String(s.locationId) : '',
+      installation_id: s.installationId != null ? String(s.installationId) : '',
+      due_date: s.dueDate ? String(s.dueDate).slice(0, 10) : '',
+      checklist: Array.isArray(s.checklist) ? s.checklist.join('\n') : '',
+    });
+    setShowCreate(true);
+  };
+
+  const handleSubmit = () => {
     if (!form.title || !form.due_date) { toast.error('Title and due date are required'); return; }
     if (!form.location_id || !form.installation_id) { toast.error('Location and installation are required'); return; }
     const payload = {
@@ -94,7 +116,11 @@ export default function MaintenancePage() {
       due_date: form.due_date,
       checklist: form.checklist ? form.checklist.split('\n').map(s => s.trim()).filter(Boolean) : [],
     };
-    createMaintenance.mutate(payload, { onSuccess: () => { setShowCreate(false); setForm(EMPTY_FORM); } });
+    if (editId) {
+      updateMaintenance.mutate({ id: editId, ...payload }, { onSuccess: closeModal });
+    } else {
+      createMaintenance.mutate(payload, { onSuccess: closeModal });
+    }
   };
 
   const handleComplete = () => {
@@ -113,7 +139,7 @@ export default function MaintenancePage() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setShowCreate(true)}
+            onClick={openCreate}
             className="flex items-center gap-2 px-4 py-2 bg-sail-primary text-white rounded-lg text-sm font-semibold hover:bg-sail-secondary transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" /> Add Schedule
@@ -162,7 +188,7 @@ export default function MaintenancePage() {
                         <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${TYPE_COLORS[s.type] || ''}`}>{TYPE_LABELS[s.type] || s.type}</span>
                         <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border ${STATUS_COLORS[s.status] || ''}`}>{STATUS_LABELS[s.status] || s.status}</span>
                         <span className="text-xs text-sail-text-secondary font-medium">{formatDate(s.dueDate)}</span>
-                        <div className="flex gap-1">
+                        <div className="flex items-center gap-1">
                           {s.status !== 'COMPLETED' && (
                             <button
                               onClick={() => { setCompleteTarget(s); setCompletionNotes(''); }}
@@ -171,6 +197,20 @@ export default function MaintenancePage() {
                               Complete
                             </button>
                           )}
+                          <button
+                            onClick={() => openEdit(s)}
+                            title="Edit schedule"
+                            className="p-1.5 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(s)}
+                            title="Delete schedule"
+                            className="p-1.5 rounded hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -194,9 +234,9 @@ export default function MaintenancePage() {
         </div>
       )}
 
-      {/* Create Schedule Modal */}
+      {/* Create / Edit Schedule Modal */}
       {showCreate && (
-        <Modal title="Add Maintenance Schedule" onClose={() => setShowCreate(false)}>
+        <Modal title={editId ? 'Edit Maintenance Schedule' : 'Add Maintenance Schedule'} onClose={closeModal}>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-sail-text-primary mb-1.5">Title</label>
@@ -247,11 +287,13 @@ export default function MaintenancePage() {
                 className="w-full px-3 py-2.5 border border-sail-border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-sail-primary/20" />
             </div>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setShowCreate(false)} className="px-4 py-2 border border-sail-border rounded-lg text-sm font-medium hover:bg-slate-50">Cancel</button>
-              <button onClick={handleCreate} disabled={createMaintenance.isPending}
+              <button onClick={closeModal} className="px-4 py-2 border border-sail-border rounded-lg text-sm font-medium hover:bg-slate-50">Cancel</button>
+              <button onClick={handleSubmit} disabled={createMaintenance.isPending || updateMaintenance.isPending}
                 className="flex items-center gap-2 px-4 py-2 bg-sail-primary text-white rounded-lg text-sm font-semibold hover:bg-sail-secondary disabled:opacity-60 transition-colors">
                 <Save className="w-4 h-4" />
-                {createMaintenance.isPending ? 'Creating…' : 'Create Schedule'}
+                {editId
+                  ? (updateMaintenance.isPending ? 'Saving…' : 'Save Changes')
+                  : (createMaintenance.isPending ? 'Creating…' : 'Create Schedule')}
               </button>
             </div>
           </div>
@@ -280,6 +322,19 @@ export default function MaintenancePage() {
           </div>
         </Modal>
       )}
+
+      {/* Delete confirm */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          deleteMaintenance.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+        }}
+        title="Delete Maintenance Schedule"
+        description={`Delete schedule "${deleteTarget?.title}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        isLoading={deleteMaintenance.isPending}
+      />
     </div>
   );
 }

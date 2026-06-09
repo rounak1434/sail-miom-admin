@@ -2,11 +2,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { complaintsApi } from '@/api/complaintsApi';
 import { toast } from 'sonner';
 
+// Poll every 15s so complaints raised elsewhere (mobile app / another admin) appear
+// live while this page is open. refetchIntervalInBackground stays false (default), so
+// it only polls while the tab is focused — no wasted requests on a backgrounded tab.
+const LIVE_POLL_MS = 15000;
+
 export function useComplaints(params = {}) {
   return useQuery({
     queryKey: ['complaints', params],
     queryFn: () => complaintsApi.getAll(params),
     keepPreviousData: true,
+    refetchInterval: LIVE_POLL_MS,
   });
 }
 
@@ -15,6 +21,7 @@ export function useComplaint(id) {
     queryKey: ['complaint', id],
     queryFn: () => complaintsApi.getById(id),
     enabled: !!id,
+    refetchInterval: LIVE_POLL_MS,
   });
 }
 
@@ -23,6 +30,7 @@ export function useComplaintTimeline(id) {
     queryKey: ['complaint-timeline', id],
     queryFn: () => complaintsApi.getTimeline(id),
     enabled: !!id,
+    refetchInterval: LIVE_POLL_MS,
   });
 }
 

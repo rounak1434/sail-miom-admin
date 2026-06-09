@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
-import { ArrowLeft, Edit, Trash2, UserCheck, CheckSquare, Download, Clock, MapPin, User, Calendar, AlertTriangle, X, ImagePlus, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, UserCheck, CheckSquare, Download, Clock, MapPin, User, Calendar, AlertTriangle, X, ImagePlus, Loader2, FileText, Image as ImageIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useComplaint, useComplaintTimeline, useAssignComplaint, useUpdateComplaintStatus, useDeleteComplaint } from '@/hooks/useComplaints';
 import { useUsers } from '@/hooks/useUsers';
@@ -170,10 +170,9 @@ export default function ComplaintDetailPage({ params }) {
             <div className="px-6 pb-6">
               <Tabs defaultValue="details">
                 <TabsList className="mb-4">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="timeline">Timeline ({timeline.length})</TabsTrigger>
-                  <TabsTrigger value="comments">Comments</TabsTrigger>
-                  <TabsTrigger value="photos">Photos ({complaint.attachments?.length ?? 0})</TabsTrigger>
+                  <TabsTrigger value="details"><FileText /> Details</TabsTrigger>
+                  <TabsTrigger value="timeline"><Clock /> Timeline ({timeline.length})</TabsTrigger>
+                  <TabsTrigger value="photos"><ImageIcon /> Photos ({complaint.attachments?.length ?? 0})</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="details">
@@ -218,10 +217,6 @@ export default function ComplaintDetailPage({ params }) {
                       </div>
                     ))}
                   </div>
-                </TabsContent>
-
-                <TabsContent value="comments">
-                  <div className="flex items-center justify-center py-8 text-sail-text-muted text-sm">No comments yet</div>
                 </TabsContent>
 
                 <TabsContent value="photos">
