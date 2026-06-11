@@ -3,7 +3,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Zap, Shield, FileText, BarChart3, Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import { Eye, EyeOff, Shield, FileText, BarChart3, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -56,8 +57,8 @@ function LoginForm() {
         </div>
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-sail-primary rounded-xl flex items-center justify-center shadow-lg">
-              <Zap className="w-7 h-7 text-white" strokeWidth={2.5} />
+            <div className="w-12 h-12 bg-sail-primary rounded-xl flex items-center justify-center shadow-lg p-2">
+              <Image src="/sail-logo-white.png" alt="SAIL-MIOM" width={32} height={32} className="object-contain" />
             </div>
             <div>
               <h1 className="text-white font-bold text-xl">SAIL-MIOM</h1>
@@ -96,8 +97,8 @@ function LoginForm() {
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-12 bg-white">
         <div className="w-full max-w-sm">
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <div className="w-10 h-10 bg-sail-primary rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" strokeWidth={2.5} />
+            <div className="w-10 h-10 bg-sail-primary rounded-lg flex items-center justify-center p-1.5">
+              <Image src="/sail-logo-white.png" alt="SAIL-MIOM" width={28} height={28} className="object-contain" />
             </div>
             <div>
               <h1 className="font-bold text-sail-text-primary">SAIL-MIOM</h1>

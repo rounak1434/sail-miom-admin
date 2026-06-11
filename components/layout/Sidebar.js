@@ -1,10 +1,11 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, AlertCircle, FileText, Wrench,
   Users, BarChart2, Settings, ChevronLeft, ChevronRight,
-  LogOut, Zap, Bell, ClipboardList
+  LogOut, Bell, ClipboardList
 } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
@@ -49,8 +50,8 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10 min-h-[72px]">
-        <div className="flex-shrink-0 w-9 h-9 bg-sail-primary rounded-lg flex items-center justify-center">
-          <Zap className="w-5 h-5 text-white" strokeWidth={2.5} />
+        <div className="flex-shrink-0 w-9 h-9 bg-sail-primary rounded-lg flex items-center justify-center p-1.5">
+          <Image src="/sail-logo-white.png" alt="SAIL-MIOM" width={24} height={24} className="object-contain" />
         </div>
         {!sidebarCollapsed && (
           <div className="overflow-hidden">
