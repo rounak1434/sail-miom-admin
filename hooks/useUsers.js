@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { usersApi } from '@/api/usersApi';
 import { toast } from 'sonner';
 
 export function useUsers(params = {}) {
-  return useQuery({ queryKey: ['users', params], queryFn: () => usersApi.getAll(params), keepPreviousData: true });
+  return useQuery({ queryKey: ['users', params], queryFn: () => usersApi.getAll(params), placeholderData: keepPreviousData });
 }
 
 // Refresh both the user list and the per-role/status count cards on the Users page.

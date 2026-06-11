@@ -29,7 +29,13 @@ function LoginForm() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (isAuthenticated) router.replace('/dashboard');
+    if (isAuthenticated) {
+      // Send the user back to the page that bounced them here (middleware sets ?from=…),
+      // falling back to the dashboard. Only allow internal paths to avoid open redirects.
+      const from = searchParams.get('from');
+      const dest = from && from.startsWith('/') && !from.startsWith('//') ? from : '/dashboard';
+      router.replace(dest);
+    }
     if (searchParams.get('expired') === 'true') toast.error('Your session expired. Please sign in again.');
   }, [isAuthenticated, searchParams, router]);
 

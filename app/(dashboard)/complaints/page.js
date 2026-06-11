@@ -55,9 +55,11 @@ export default function ComplaintsPage() {
     const status = sp.get('status');
     const priority = sp.get('priority');
     const location_id = sp.get('location_id');
+    const breached = sp.get('breached');
     if (status !== null) next.status = status;
     if (priority !== null) next.priority = priority;
     if (location_id !== null) next.location_id = location_id;
+    if (breached !== null) next.breached = breached;
     if (Object.keys(next).length) setComplaintsFilter({ ...next, page: 1 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -130,8 +132,8 @@ export default function ComplaintsPage() {
             <option value="">All Locations</option>
             {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
           </select>
-          {(complaintsFilter.search || complaintsFilter.priority || complaintsFilter.location_id) && (
-            <button onClick={() => setComplaintsFilter({ search: '', priority: '', location_id: '' })} className="text-sm text-sail-primary hover:underline">Clear filters</button>
+          {(complaintsFilter.search || complaintsFilter.priority || complaintsFilter.location_id || complaintsFilter.breached) && (
+            <button onClick={() => setComplaintsFilter({ search: '', priority: '', location_id: '', breached: '' })} className="text-sm text-sail-primary hover:underline">Clear filters</button>
           )}
         </div>
 
@@ -188,7 +190,13 @@ export default function ComplaintsPage() {
                 <thead>
                   <tr>
                     <th className="px-4 py-3 text-left w-10">
-                      <input type="checkbox" onChange={(e) => setSelected(e.target.checked ? complaints.map((c) => c.id) : [])} className="rounded border-slate-300" />
+                      <input
+                        type="checkbox"
+                        ref={(el) => { if (el) el.indeterminate = selected.length > 0 && selected.length < complaints.length; }}
+                        checked={complaints.length > 0 && selected.length === complaints.length}
+                        onChange={(e) => setSelected(e.target.checked ? complaints.map((c) => c.id) : [])}
+                        className="rounded border-slate-300"
+                      />
                     </th>
                     <th className="px-4 py-3 text-left">ID</th>
                     <th className="px-4 py-3 text-left">Title</th>
@@ -257,7 +265,7 @@ export default function ComplaintsPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => { deleteComplaint.mutate(deleteTarget.id); setDeleteTarget(null); }}
         title="Delete Complaint"
-        description={`Are you sure you want to delete complaint "${deleteTarget?.id}"? This action cannot be undone.`}
+        description={`Are you sure you want to delete complaint "${deleteTarget?.complaintNumber ?? deleteTarget?.id}"? This action cannot be undone.`}
         confirmLabel="Delete"
         isLoading={deleteComplaint.isPending}
       />

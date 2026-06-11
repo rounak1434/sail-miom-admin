@@ -201,21 +201,25 @@ export default function ComplaintDetailPage({ params }) {
                   <div className="space-y-4">
                     {timeline.length === 0 ? (
                       <div className="text-center py-6 text-sail-text-muted text-sm">No timeline entries yet</div>
-                    ) : timeline.map((item, i) => (
+                    ) : timeline.map((item, i) => {
+                      // The actor may arrive as a string or as a { name } relation object.
+                      const actorName = typeof item.user === 'string' ? item.user : (item.user?.name ?? '—');
+                      return (
                       <div key={i} className="flex gap-3">
                         <div className="w-8 h-8 bg-sail-primary rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">
-                          {getInitials(item.user)}
+                          {getInitials(actorName)}
                         </div>
                         <div className="flex-1 bg-slate-50 rounded-lg p-3">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-sm font-semibold text-sail-text-primary">{item.action}</span>
                             <span className="text-xs text-sail-text-muted">{timeAgo(item.timestamp)}</span>
                           </div>
-                          <p className="text-xs text-sail-text-secondary">{item.user}</p>
+                          <p className="text-xs text-sail-text-secondary">{actorName}</p>
                           {item.note && <p className="text-sm text-sail-text-secondary mt-1 italic">"{item.note}"</p>}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </TabsContent>
 

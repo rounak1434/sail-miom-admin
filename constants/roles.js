@@ -8,7 +8,9 @@ export const ROLES = {
 
 export const ROLE_PERMISSIONS = {
   superadmin: ['all'],
-  admin: ['dashboard', 'complaints', 'drawings', 'maintenance', 'users', 'reports', 'settings'],
+  admin: ['dashboard', 'complaints', 'drawings', 'maintenance', 'work-orders', 'users', 'reports', 'settings'],
+  engineer: ['dashboard', 'complaints', 'drawings', 'maintenance', 'work-orders', 'reports'],
+  contractor: ['dashboard', 'complaints', 'work-orders'],
   viewer: ['dashboard', 'reports'],
 };
 

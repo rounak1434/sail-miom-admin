@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { complaintsApi } from '@/api/complaintsApi';
 import { toast } from 'sonner';
 
@@ -11,7 +11,7 @@ export function useComplaints(params = {}) {
   return useQuery({
     queryKey: ['complaints', params],
     queryFn: () => complaintsApi.getAll(params),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
     refetchInterval: LIVE_POLL_MS,
   });
 }

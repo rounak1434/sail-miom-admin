@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { maintenanceApi } from '@/api/maintenanceApi';
 import { toast } from 'sonner';
 
 export function useMaintenance(params = {}) {
-  return useQuery({ queryKey: ['maintenance', params], queryFn: () => maintenanceApi.getAll(params), keepPreviousData: true });
+  return useQuery({ queryKey: ['maintenance', params], queryFn: () => maintenanceApi.getAll(params), placeholderData: keepPreviousData });
 }
 
 // Refresh the schedule list, the maintenance stat cards, and the dashboard

@@ -10,6 +10,7 @@ export const useFilterStore = create(
         priority: '',
         location_id: '',
         assigned_to: '',
+        breached: '',
         search: '',
         page: 1,
         limit: 20,
@@ -59,7 +60,7 @@ export const useFilterStore = create(
         set((state) => ({ reportsFilter: { ...state.reportsFilter, ...filter } })),
 
       resetComplaintsFilter: () =>
-        set({ complaintsFilter: { status: '', priority: '', location_id: '', assigned_to: '', search: '', page: 1, limit: 20, sort: 'created_at', order: 'desc', dateFrom: '', dateTo: '' } }),
+        set({ complaintsFilter: { status: '', priority: '', location_id: '', assigned_to: '', breached: '', search: '', page: 1, limit: 20, sort: 'created_at', order: 'desc', dateFrom: '', dateTo: '' } }),
     }),
     {
       name: 'sail-filters',

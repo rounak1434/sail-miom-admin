@@ -1,14 +1,21 @@
 'use client';
 import { Search, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
 
 export default function SearchInput({ placeholder = 'Search...', onSearch, className, defaultValue = '' }) {
   const [value, setValue] = useState(defaultValue);
   const debouncedValue = useDebounce(value, 300);
+  const isFirstRun = useRef(true);
 
   useEffect(() => {
+    // Skip the mount fire: the initial value already lives in the filter store,
+    // so calling onSearch here would needlessly reset pagination to page 1.
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
     if (typeof onSearch === 'function') {
       onSearch(debouncedValue);
     }

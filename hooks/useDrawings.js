@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { drawingsApi } from '@/api/drawingsApi';
 import { toast } from 'sonner';
 
 export function useDrawings(params = {}) {
-  return useQuery({ queryKey: ['drawings', params], queryFn: () => drawingsApi.getAll(params), keepPreviousData: true });
+  return useQuery({ queryKey: ['drawings', params], queryFn: () => drawingsApi.getAll(params), placeholderData: keepPreviousData });
 }
 
 export function useDrawingCategories() {

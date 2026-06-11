@@ -9,19 +9,20 @@ import {
 import { useUiStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
 import { useAuth } from '@/hooks/useAuth';
+import { canAccess } from '@/constants/roles';
 import { cn, getInitials } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/complaints', label: 'Complaints', icon: AlertCircle },
-  { href: '/drawings', label: 'Drawings', icon: FileText },
-  { href: '/maintenance', label: 'Maintenance', icon: Wrench },
-  { href: '/work-orders', label: 'Work Orders', icon: ClipboardList },
-  { href: '/users', label: 'Users', icon: Users },
-  { href: '/reports', label: 'Reports', icon: BarChart2 },
-  { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'dashboard' },
+  { href: '/complaints', label: 'Complaints', icon: AlertCircle, page: 'complaints' },
+  { href: '/drawings', label: 'Drawings', icon: FileText, page: 'drawings' },
+  { href: '/maintenance', label: 'Maintenance', icon: Wrench, page: 'maintenance' },
+  { href: '/work-orders', label: 'Work Orders', icon: ClipboardList, page: 'work-orders' },
+  { href: '/users', label: 'Users', icon: Users, page: 'users' },
+  { href: '/reports', label: 'Reports', icon: BarChart2, page: 'reports' },
+  { href: '/settings', label: 'Settings', icon: Settings, page: 'settings' },
 ];
 
 export default function Sidebar() {
@@ -29,6 +30,9 @@ export default function Sidebar() {
   const { sidebarCollapsed, toggleSidebarCollapse, sidebarOpen, setSidebarOpen } = useUiStore();
   const { user } = useAuthStore();
   const { logout } = useAuth();
+
+  // Only show nav items the current role is allowed to reach (constants/roles.js).
+  const visibleNavItems = navItems.filter((item) => canAccess(user?.role, item.page));
 
   const isActive = (href) => pathname === href || pathname.startsWith(href + '/');
 
@@ -58,7 +62,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-        {navItems.map(({ href, label, icon: Icon, badge }) => {
+        {visibleNavItems.map(({ href, label, icon: Icon, badge }) => {
           const active = isActive(href);
           const item = (
             <Link
