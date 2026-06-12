@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Eye, EyeOff, Shield, FileText, BarChart3, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -125,13 +126,9 @@ function LoginForm() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-sm font-medium text-sail-text-primary">Password</label>
-                <button
-                  type="button"
-                  onClick={() => toast.info('Contact your system administrator to reset your password.')}
-                  className="text-xs text-sail-primary hover:underline"
-                >
+                <Link href="/forgot-password" className="text-xs text-sail-primary hover:underline">
                   Forgot password?
-                </button>
+                </Link>
               </div>
               <div className="relative">
                 <input

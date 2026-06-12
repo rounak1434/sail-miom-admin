@@ -25,6 +25,10 @@ const PRIORITY_COLORS = {
   LOW: 'bg-green-500/10 text-green-400 border-green-500/20',
 };
 
+// Operational roles a work order may be assigned to (mirrors the backend guard).
+const ASSIGNABLE_ROLES = ['SUPERADMIN', 'ADMIN', 'ENGINEER', 'CONTRACTOR', 'STAFF'];
+const titleCase = (s) => (s ? s.charAt(0) + s.slice(1).toLowerCase() : s);
+
 function Modal({ open, onClose, title, children }) {
   if (!open) return null;
   return (
@@ -43,7 +47,7 @@ export default function WorkOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [contractors, setContractors] = useState([]);
+  const [assignees, setAssignees] = useState([]);
   const [locations, setLocations] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
@@ -80,8 +84,16 @@ export default function WorkOrdersPage() {
     return () => window.removeEventListener('focus', onFocus);
   }, [statusFilter]);
 
+  // Work orders may be assigned to any authenticated operational role — never a
+  // civilian (PUBLIC / CIVILIAN_GUEST) or a not-yet-approved (PENDING) account.
+  // The backend enforces this too (422); the dropdown just avoids offering them.
   useEffect(() => {
-    usersApi.getAll({ role: 'CONTRACTOR', limit: 100 }).then(r => setContractors(r.data || r || [])).catch(() => {});
+    usersApi.getAll({ status: 'active', limit: 200 })
+      .then(r => {
+        const list = r.data || r || [];
+        setAssignees(list.filter(u => ASSIGNABLE_ROLES.includes(u.role)));
+      })
+      .catch(() => {});
     settingsApi.getLocations().then(r => setLocations(r.data || r || [])).catch(() => {});
   }, []);
 
@@ -289,14 +301,17 @@ export default function WorkOrdersPage() {
             </div>
           </div>
           <div>
-            <label className="text-slate-400 text-xs mb-1 block">Assign to Contractor</label>
+            <label className="text-slate-400 text-xs mb-1 block">Assign to</label>
             <select value={form.assigned_to_id} onChange={e => setForm(f => ({ ...f, assigned_to_id: e.target.value }))}
               className="w-full px-3 py-2 bg-sail-bg border border-white/10 text-white rounded-md text-sm">
               <option value="">— Unassigned —</option>
-              {contractors.map(c => (
-                <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
+              {assignees.map(u => (
+                <option key={u.id} value={u.id}>{u.name} — {titleCase(u.role)}{u.email ? ` (${u.email})` : ''}</option>
               ))}
             </select>
+            <p className="text-slate-500 text-[11px] mt-1">
+              Only operational roles (engineer, contractor, staff, admin) can be assigned — not civilians.
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

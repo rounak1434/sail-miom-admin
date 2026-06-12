@@ -85,7 +85,13 @@ export default function ComplaintDetailPage({ params }) {
   // Relations come back as objects ({ id, name, … }); render their .name, never the object.
   const locationName = complaint.location?.name ?? complaint.locationName ?? '—';
   const installationName = complaint.installationType?.name ?? complaint.installation?.name ?? complaint.installationName ?? 'N/A';
-  const raisedByName = complaint.raisedBy?.name ?? complaint.raisedByName ?? '—';
+  // Guest (CIVILIAN_GUEST) complaints have no raiser User — fall back to the
+  // contact details stored on the complaint itself.
+  const isGuest = complaint.source === 'CIVILIAN_GUEST';
+  const guestName = complaint.guestName ?? complaint.houseOwnerName;
+  const raisedByName = complaint.raisedBy?.name
+    ?? complaint.raisedByName
+    ?? (guestName ? `${guestName}${isGuest ? ' (Civilian Guest)' : ''}` : '—');
   const assignedToName = complaint.assignedTo?.name ?? complaint.assignedToName ?? 'Unassigned';
   const isBreached = complaint.isSlaBreached ?? complaint.slaBreach ?? false;
   const displayId = complaint.complaintNumber ?? complaint.id;
@@ -186,6 +192,12 @@ export default function ComplaintDetailPage({ params }) {
                       { label: 'Installation', value: installationName },
                       { label: 'Raised By', value: raisedByName, icon: User },
                       { label: 'Assigned To', value: assignedToName },
+                      // Guest / house complaints: surface the civilian contact details.
+                      ...(complaint.address ? [{ label: 'Address', value: complaint.address, icon: MapPin }] : []),
+                      ...((complaint.guestPhone || complaint.houseOwnerPhone)
+                        ? [{ label: 'Contact Phone', value: complaint.guestPhone || complaint.houseOwnerPhone }] : []),
+                      ...(complaint.guestEmail ? [{ label: 'Contact Email', value: complaint.guestEmail }] : []),
+                      ...(complaint.landmark ? [{ label: 'Landmark', value: complaint.landmark }] : []),
                       { label: 'Created At', value: formatDateTime(complaint.createdAt), icon: Calendar },
                       { label: 'Estimated Downtime', value: complaint.estimatedDowntime || 'N/A' },
                     ].map(({ label, value, icon: Icon }) => (

@@ -34,4 +34,16 @@ export const authApi = {
     const { data } = await api.put('/auth/change-password', payload);
     return data;
   },
+
+  // Email-based reset. forgotPassword always resolves the same way (the backend
+  // does not reveal whether the email matched an account).
+  forgotPassword: async (email) => {
+    const { data } = await api.post('/auth/forgot-password', { email });
+    return data;
+  },
+
+  resetPassword: async ({ token, newPassword }) => {
+    const { data } = await api.post('/auth/reset-password', { token, newPassword });
+    return data;
+  },
 };
