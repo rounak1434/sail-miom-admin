@@ -203,7 +203,7 @@ export default function WorkOrdersPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10 text-left">
-                <th className="px-4 py-3 text-slate-400 text-xs font-medium">Work Order</th>
+                <th className="px-4 py-3 text-white text-xs font-medium">Work Order</th>
                 <th className="px-4 py-3 text-slate-400 text-xs font-medium">Assigned To</th>
                 <th className="px-4 py-3 text-slate-400 text-xs font-medium">Priority</th>
                 <th className="px-4 py-3 text-slate-400 text-xs font-medium">Status</th>
