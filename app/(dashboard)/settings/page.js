@@ -425,7 +425,7 @@ export default function SettingsPage() {
             <div className="max-w-md">
               <h2 className="font-semibold text-sail-text-primary mb-4">SLA Configuration</h2>
               <div className="border border-sail-border rounded-xl overflow-hidden">
-                <table className="w-full">
+                <table className="w-full data-table">
                   <thead><tr className="bg-slate-50 border-b border-sail-border">
                     <th className="px-4 py-3 text-left text-xs font-semibold text-sail-text-muted uppercase tracking-wide">Priority</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-sail-text-muted uppercase tracking-wide">Response Time (Hours)</th>

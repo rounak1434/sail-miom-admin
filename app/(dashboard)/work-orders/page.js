@@ -200,7 +200,7 @@ export default function WorkOrdersPage() {
             <p className="text-slate-400">No work orders found</p>
           </div>
         ) : (
-          <table className="w-full">
+          <table className="w-full data-table">
             <thead>
               <tr className="border-b border-white/10 text-left">
                 <th className="px-4 py-3 text-white text-xs font-medium">Work Order</th>

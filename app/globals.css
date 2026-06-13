@@ -64,6 +64,16 @@
   .data-table tr:hover td {
     @apply bg-blue-50/30;
   }
+  /* Mobile only (<768px): wide tables scroll horizontally instead of being
+     clipped by the card's overflow-hidden. Desktop layout is unchanged. */
+  @media (max-width: 767px) {
+    .data-table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
 
   /* Badge variants */
   .badge-open {
