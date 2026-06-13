@@ -10,7 +10,6 @@ import { StatusBadge, PriorityBadge } from '@/components/shared/Badges';
 import { PageLoader } from '@/components/shared/LoadingSpinner';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { formatDateTime, timeAgo } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getInitials } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -48,6 +47,7 @@ export default function ComplaintDetailPage({ params }) {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [statusNote, setStatusNote] = useState('');
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [tab, setTab] = useState('details');
   const fileInputRef = useRef(null);
   const qc = useQueryClient();
 
@@ -125,9 +125,9 @@ export default function ComplaintDetailPage({ params }) {
         <ArrowLeft className="w-4 h-4" /> Back to Complaints
       </button>
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Left: Main Content */}
-        <div className="col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4">
           {/* Header Card */}
           <div className="section-card">
             <div className="p-6">
@@ -174,19 +174,37 @@ export default function ComplaintDetailPage({ params }) {
 
             {/* Tabs */}
             <div className="px-6 pb-6">
-              <Tabs defaultValue="details">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="details"><FileText /> Details</TabsTrigger>
-                  <TabsTrigger value="timeline"><Clock /> Timeline ({timeline.length})</TabsTrigger>
-                  <TabsTrigger value="photos"><ImageIcon /> Photos ({complaint.attachments?.length ?? 0})</TabsTrigger>
-                </TabsList>
+              {/* Segmented tab buttons (real <button>s — keyboard accessible,
+                  44px touch targets, filled active / outlined inactive). */}
+              <div className="flex flex-wrap gap-2 mb-4" role="tablist" aria-label="Complaint sections">
+                {[
+                  { key: 'details', label: 'Details', Icon: FileText },
+                  { key: 'timeline', label: `Timeline (${timeline.length})`, Icon: Clock },
+                  { key: 'photos', label: `Photos (${complaint.attachments?.length ?? 0})`, Icon: ImageIcon },
+                ].map(({ key, label, Icon }) => (
+                  <button
+                    key={key}
+                    role="tab"
+                    aria-selected={tab === key}
+                    onClick={() => setTab(key)}
+                    className={`inline-flex items-center gap-2 min-h-[44px] px-4 rounded-lg text-sm font-medium border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sail-primary/40 ${
+                      tab === key
+                        ? 'bg-sail-primary text-white border-sail-primary'
+                        : 'bg-white text-sail-text-secondary border-sail-border hover:border-sail-primary/40'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" /> {label}
+                  </button>
+                ))}
+              </div>
 
-                <TabsContent value="details">
+              {tab === 'details' && (
+                <div role="tabpanel">
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold text-sail-text-primary mb-2">Description</h3>
-                    <p className="text-sm text-sail-text-secondary leading-relaxed">{complaint.description}</p>
+                    <p className="text-sm text-sail-text-secondary leading-relaxed break-words">{complaint.description}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
                       { label: 'Location', value: locationName, icon: MapPin },
                       { label: 'Installation', value: installationName },
@@ -201,15 +219,17 @@ export default function ComplaintDetailPage({ params }) {
                       { label: 'Created At', value: formatDateTime(complaint.createdAt), icon: Calendar },
                       { label: 'Estimated Downtime', value: complaint.estimatedDowntime || 'N/A' },
                     ].map(({ label, value, icon: Icon }) => (
-                      <div key={label} className="flex flex-col gap-1">
+                      <div key={label} className="flex flex-col gap-1 min-w-0">
                         <span className="text-xs font-medium text-sail-text-muted uppercase tracking-wide">{label}</span>
-                        <span className="text-sm text-sail-text-primary font-medium">{value}</span>
+                        <span className="text-sm text-sail-text-primary font-medium break-words">{value}</span>
                       </div>
                     ))}
                   </div>
-                </TabsContent>
+                </div>
+              )}
 
-                <TabsContent value="timeline">
+              {tab === 'timeline' && (
+                <div role="tabpanel">
                   <div className="space-y-4">
                     {timeline.length === 0 ? (
                       <div className="text-center py-6 text-sail-text-muted text-sm">No timeline entries yet</div>
@@ -233,9 +253,11 @@ export default function ComplaintDetailPage({ params }) {
                       );
                     })}
                   </div>
-                </TabsContent>
+                </div>
+              )}
 
-                <TabsContent value="photos">
+              {tab === 'photos' && (
+                <div role="tabpanel">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-sail-text-primary">Attachments</h3>
                     <button
@@ -283,8 +305,8 @@ export default function ComplaintDetailPage({ params }) {
                       ))}
                     </div>
                   )}
-                </TabsContent>
-              </Tabs>
+                </div>
+              )}
             </div>
           </div>
         </div>
